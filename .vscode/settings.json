@@ -1,0 +1,10 @@
+{
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "\\.rs$",
+        "cmd": "cd ${workspaceFolder}/money-example && cargo fmt"
+      }
+    ]
+  }
+}
