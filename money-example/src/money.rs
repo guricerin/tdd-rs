@@ -1,3 +1,4 @@
+#[derive(PartialEq)]
 pub struct Money {
     amount: i32,
     currency: &'static str,
@@ -22,10 +23,6 @@ impl Money {
         self.currency
     }
 
-    pub fn equals(&self, rhs: &Self) -> bool {
-        self.amount == rhs.amount && self.currency == rhs.currency
-    }
-
     pub fn dollar(amount: i32) -> Money {
         Money::new(amount, "USD")
     }
@@ -42,24 +39,15 @@ mod tests {
     #[test]
     fn test_multiplication() {
         let five = Money::dollar(5);
-        assert!(Money::dollar(10).equals(&five.times(2)));
-        assert!(Money::dollar(15).equals(&five.times(3)));
+        assert!(Money::dollar(10) == five.times(2));
+        assert!(Money::dollar(15) == five.times(3));
     }
 
     #[test]
     fn test_equality() {
-        assert!(Money::dollar(5).equals(&Money::dollar(5)));
-        assert!(!(Money::dollar(5).equals(&Money::dollar(6))));
-        assert!(Money::franc(5).equals(&Money::franc(5)));
-        assert!(!(Money::franc(5).equals(&Money::franc(6))));
-        assert!(!(Money::franc(5).equals(&Money::dollar(5))));
-    }
-
-    #[test]
-    fn test_franc_multiplication() {
-        let five = Money::franc(5);
-        assert!(Money::franc(10).equals(&five.times(2)));
-        assert!(Money::franc(15).equals(&five.times(3)));
+        assert!(Money::dollar(5) == Money::dollar(5));
+        assert!(Money::dollar(5) != Money::dollar(6));
+        assert!(Money::franc(5) != Money::dollar(5));
     }
 
     #[test]
