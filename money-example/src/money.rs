@@ -1,3 +1,5 @@
+pub trait Money {}
+
 #[cfg(test)]
 mod tests {
     use crate::{dollar::Dollar, franc::Franc};
@@ -13,6 +15,8 @@ mod tests {
     fn test_equality() {
         assert!(Dollar::new(5) == Dollar::new(5));
         assert_ne!(Dollar::new(5), Dollar::new(6));
+        assert!(Franc::new(5) == Franc::new(5));
+        assert_ne!(Franc::new(5), Franc::new(6));
     }
 
     #[test]

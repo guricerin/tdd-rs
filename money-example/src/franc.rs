@@ -1,3 +1,5 @@
+use crate::money::Money;
+
 #[derive(Debug, PartialEq)]
 pub struct Franc {
     amount: i32,
@@ -12,3 +14,5 @@ impl Franc {
         Self::new(self.amount * multiplier)
     }
 }
+
+impl Money for Franc {}
