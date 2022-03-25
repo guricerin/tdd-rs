@@ -11,8 +11,4 @@ impl Dollar {
     pub fn times(&self, multiplier: i32) -> Self {
         Self::new(self.amount * multiplier)
     }
-
-    pub fn amount(&self) -> i32 {
-        self.amount
-    }
 }
