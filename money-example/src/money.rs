@@ -1,28 +1,49 @@
-pub trait Money {}
+use crate::{dollar::Dollar, franc::Franc};
+
+pub trait Money {
+    fn times(&self, multiplier: i32) -> Self;
+}
+
+struct MoneyFactory;
+
+impl MoneyFactory {
+    pub fn dollar(amount: i32) -> Dollar {
+        Dollar::new(amount)
+    }
+
+    pub fn franc(amount: i32) -> Franc {
+        Franc::new(amount)
+    }
+}
 
 #[cfg(test)]
 mod tests {
-    use crate::{dollar::Dollar, franc::Franc};
+    use crate::{
+        dollar::Dollar,
+        franc::Franc,
+        money::{Money, MoneyFactory},
+    };
 
     #[test]
     fn test_multiplication() {
-        let five = Dollar::new(5);
-        assert_eq!(Dollar::new(10), five.times(2));
-        assert_eq!(Dollar::new(15), five.times(3));
+        let five = MoneyFactory::dollar(5);
+        assert_eq!(MoneyFactory::dollar(10), five.times(2));
+        assert_eq!(MoneyFactory::dollar(15), five.times(3));
     }
 
     #[test]
     fn test_equality() {
-        assert!(Dollar::new(5) == Dollar::new(5));
-        assert_ne!(Dollar::new(5), Dollar::new(6));
-        assert!(Franc::new(5) == Franc::new(5));
-        assert_ne!(Franc::new(5), Franc::new(6));
+        assert!(MoneyFactory::dollar(5) == MoneyFactory::dollar(5));
+        assert_ne!(MoneyFactory::dollar(5), MoneyFactory::dollar(6));
+        assert!(MoneyFactory::franc(5) == MoneyFactory::franc(5));
+        assert_ne!(MoneyFactory::franc(5), MoneyFactory::franc(6));
+        // assert_ne!(Franc::new(5), MoneyFactory::dollar(6));
     }
 
     #[test]
     fn test_franc_multiplication() {
-        let five = Franc::new(5);
-        assert_eq!(Franc::new(10), five.times(2));
-        assert_eq!(Franc::new(15), five.times(3));
+        let five = MoneyFactory::franc(5);
+        assert_eq!(MoneyFactory::franc(10), five.times(2));
+        assert_eq!(MoneyFactory::franc(15), five.times(3));
     }
 }

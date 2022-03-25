@@ -9,10 +9,10 @@ impl Franc {
     pub fn new(amount: i32) -> Self {
         Self { amount: amount }
     }
+}
 
-    pub fn times(&self, multiplier: i32) -> Self {
+impl Money for Franc {
+    fn times(&self, multiplier: i32) -> Self {
         Self::new(self.amount * multiplier)
     }
 }
-
-impl Money for Franc {}
