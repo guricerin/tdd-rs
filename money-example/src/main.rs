@@ -1,5 +1,3 @@
-mod dollar;
-mod franc;
 mod money;
 
 fn main() {

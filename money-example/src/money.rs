@@ -1,49 +1,70 @@
-use crate::{dollar::Dollar, franc::Franc};
-
-pub trait Money {
-    fn times(&self, multiplier: i32) -> Self;
+pub struct Money {
+    amount: i32,
+    currency: &'static str,
 }
 
-struct MoneyFactory;
-
-impl MoneyFactory {
-    pub fn dollar(amount: i32) -> Dollar {
-        Dollar::new(amount)
+impl Money {
+    pub fn new(amount: i32, currency: &'static str) -> Self {
+        Self {
+            amount: amount,
+            currency: currency,
+        }
     }
 
-    pub fn franc(amount: i32) -> Franc {
-        Franc::new(amount)
+    pub fn times(&self, multiplier: i32) -> Self {
+        Self {
+            amount: self.amount * multiplier,
+            currency: self.currency,
+        }
+    }
+
+    pub fn currency(&self) -> &'static str {
+        self.currency
+    }
+
+    pub fn equals(&self, rhs: &Self) -> bool {
+        self.amount == rhs.amount && self.currency == rhs.currency
+    }
+
+    pub fn dollar(amount: i32) -> Money {
+        Money::new(amount, "USD")
+    }
+
+    pub fn franc(amount: i32) -> Money {
+        Money::new(amount, "CHF")
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        dollar::Dollar,
-        franc::Franc,
-        money::{Money, MoneyFactory},
-    };
+    use crate::money::Money;
 
     #[test]
     fn test_multiplication() {
-        let five = MoneyFactory::dollar(5);
-        assert_eq!(MoneyFactory::dollar(10), five.times(2));
-        assert_eq!(MoneyFactory::dollar(15), five.times(3));
+        let five = Money::dollar(5);
+        assert!(Money::dollar(10).equals(&five.times(2)));
+        assert!(Money::dollar(15).equals(&five.times(3)));
     }
 
     #[test]
     fn test_equality() {
-        assert!(MoneyFactory::dollar(5) == MoneyFactory::dollar(5));
-        assert_ne!(MoneyFactory::dollar(5), MoneyFactory::dollar(6));
-        assert!(MoneyFactory::franc(5) == MoneyFactory::franc(5));
-        assert_ne!(MoneyFactory::franc(5), MoneyFactory::franc(6));
-        // assert_ne!(Franc::new(5), MoneyFactory::dollar(6));
+        assert!(Money::dollar(5).equals(&Money::dollar(5)));
+        assert!(!(Money::dollar(5).equals(&Money::dollar(6))));
+        assert!(Money::franc(5).equals(&Money::franc(5)));
+        assert!(!(Money::franc(5).equals(&Money::franc(6))));
+        assert!(!(Money::franc(5).equals(&Money::dollar(5))));
     }
 
     #[test]
     fn test_franc_multiplication() {
-        let five = MoneyFactory::franc(5);
-        assert_eq!(MoneyFactory::franc(10), five.times(2));
-        assert_eq!(MoneyFactory::franc(15), five.times(3));
+        let five = Money::franc(5);
+        assert!(Money::franc(10).equals(&five.times(2)));
+        assert!(Money::franc(15).equals(&five.times(3)));
+    }
+
+    #[test]
+    fn test_currency() {
+        assert_eq!("USD", Money::dollar(1).currency());
+        assert_eq!("CHF", Money::franc(1).currency());
     }
 }
