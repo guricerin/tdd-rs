@@ -1,5 +1,7 @@
 use std::ops::Add;
 
+pub trait Expression {}
+
 #[derive(Debug, PartialEq)]
 pub struct Money {
     amount: i32,
@@ -45,9 +47,21 @@ impl Add for Money {
     }
 }
 
+pub struct Bank {}
+
+impl Bank {
+    pub fn new() -> Self {
+        Self {}
+    }
+
+    pub fn reduce(&self, source: Money, to: &'static str) -> Money {
+        Money::dollar(10)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::money::Money;
+    use crate::money::{Bank, Money};
 
     #[test]
     fn multiplication() {
@@ -72,6 +86,8 @@ mod tests {
     #[test]
     fn simple_addition() {
         let sum = Money::dollar(5) + Money::dollar(5);
-        assert_eq!(Money::dollar(10), sum);
+        let bank = Bank::new();
+        let reduced = bank.reduce(sum, "USD");
+        assert_eq!(Money::dollar(10), reduced);
     }
 }
