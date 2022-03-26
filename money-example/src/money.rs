@@ -1,11 +1,13 @@
 use std::ops::Add;
 
-pub trait Expression {}
-
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Money {
     amount: i32,
     currency: &'static str,
+}
+
+pub trait Expression {
+    fn reduce(&self, to: &'static str) -> Money;
 }
 
 pub struct Sum {
@@ -43,6 +45,12 @@ impl Money {
     }
 }
 
+impl Expression for Money {
+    fn reduce(&self, to: &'static str) -> Money {
+        self.clone()
+    }
+}
+
 impl Sum {
     pub fn new(augend: Money, addend: Money) -> Self {
         Self {
@@ -50,8 +58,10 @@ impl Sum {
             addend: addend,
         }
     }
+}
 
-    pub fn reduce(&self, to: &'static str) -> Money {
+impl Expression for Sum {
+    fn reduce(&self, to: &'static str) -> Money {
         let amount = self.augend.amount + self.addend.amount;
         Money::new(amount, to)
     }
@@ -72,7 +82,7 @@ impl Bank {
         Self {}
     }
 
-    pub fn reduce(&self, source: Sum, to: &'static str) -> Money {
+    pub fn reduce<E: Expression>(&self, source: E, to: &'static str) -> Money {
         source.reduce(to)
     }
 }
@@ -123,5 +133,12 @@ mod tests {
         let bank = Bank::new();
         let result = bank.reduce(sum, "USD");
         assert_eq!(Money::dollar(7), result);
+    }
+
+    #[test]
+    fn reduce_money() {
+        let bank = Bank::new();
+        let result = bank.reduce(Money::dollar(1), "USD");
+        assert_eq!(Money::dollar(1), result);
     }
 }
