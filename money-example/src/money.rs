@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::{collections::HashMap, ops::Add};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Money {
@@ -7,7 +7,7 @@ pub struct Money {
 }
 
 pub trait Expression {
-    fn reduce(&self, to: &'static str) -> Money;
+    fn reduce(&self, bank: &Bank, to: &'static str) -> Money;
 }
 
 pub struct Sum {
@@ -46,8 +46,9 @@ impl Money {
 }
 
 impl Expression for Money {
-    fn reduce(&self, to: &'static str) -> Money {
-        self.clone()
+    fn reduce(&self, bank: &Bank, to: &'static str) -> Money {
+        let rate = bank.rate(self.currency, to);
+        Self::new(self.amount / rate, to)
     }
 }
 
@@ -61,7 +62,7 @@ impl Sum {
 }
 
 impl Expression for Sum {
-    fn reduce(&self, to: &'static str) -> Money {
+    fn reduce(&self, bank: &Bank, to: &'static str) -> Money {
         let amount = self.augend.amount + self.addend.amount;
         Money::new(amount, to)
     }
@@ -75,15 +76,42 @@ impl Add for Money {
     }
 }
 
-pub struct Bank {}
+#[derive(PartialEq, Eq, Hash)]
+pub struct Pair {
+    from: &'static str,
+    to: &'static str,
+}
+
+impl Pair {
+    pub fn new(from: &'static str, to: &'static str) -> Self {
+        Self { from, to }
+    }
+}
+
+pub struct Bank {
+    rates: HashMap<Pair, i32>,
+}
 
 impl Bank {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            rates: HashMap::new(),
+        }
+    }
+
+    pub fn add_rate(&mut self, from: &'static str, to: &'static str, rate: i32) {
+        self.rates.insert(Pair::new(from, to), rate);
+    }
+
+    pub fn rate(&self, from: &'static str, to: &'static str) -> i32 {
+        match self.rates.get(&Pair::new(from, to)) {
+            Some(rate) => *rate,
+            None => 1,
+        }
     }
 
     pub fn reduce<E: Expression>(&self, source: E, to: &'static str) -> Money {
-        source.reduce(to)
+        source.reduce(&self, to)
     }
 }
 
@@ -140,5 +168,18 @@ mod tests {
         let bank = Bank::new();
         let result = bank.reduce(Money::dollar(1), "USD");
         assert_eq!(Money::dollar(1), result);
+    }
+
+    #[test]
+    fn reduce_money_different_currency() {
+        let mut bank = Bank::new();
+        bank.add_rate("CHF", "USD", 2);
+        let result = bank.reduce(Money::franc(2), "USD");
+        assert_eq!(Money::dollar(1), result);
+    }
+
+    #[test]
+    fn identity_rate() {
+        assert_eq!(1, Bank::new().rate("USD", "USD"));
     }
 }
