@@ -2,10 +2,17 @@ use std::ops::Add;
 
 pub trait Expression {}
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Money {
     amount: i32,
     currency: &'static str,
+}
+
+pub struct Sum {
+    /// 被加算数
+    augend: Money,
+    /// 加数
+    addend: Money,
 }
 
 impl Money {
@@ -36,14 +43,20 @@ impl Money {
     }
 }
 
-impl Add for Money {
-    type Output = Self;
-
-    fn add(self, other: Self) -> Self {
+impl Sum {
+    pub fn new(augend: Money, addend: Money) -> Self {
         Self {
-            amount: self.amount + other.amount,
-            currency: self.currency,
+            augend: augend,
+            addend: addend,
         }
+    }
+}
+
+impl Add for Money {
+    type Output = Sum;
+
+    fn add(self, other: Self) -> Self::Output {
+        Self::Output::new(self, other)
     }
 }
 
@@ -54,14 +67,15 @@ impl Bank {
         Self {}
     }
 
-    pub fn reduce(&self, source: Money, to: &'static str) -> Money {
-        Money::dollar(10)
+    pub fn reduce(&self, source: Sum, to: &'static str) -> Money {
+        let amount = source.augend.amount + source.addend.amount;
+        Money::new(amount, to)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::money::{Bank, Money};
+    use crate::money::{Bank, Money, Sum};
 
     #[test]
     fn multiplication() {
@@ -89,5 +103,21 @@ mod tests {
         let bank = Bank::new();
         let reduced = bank.reduce(sum, "USD");
         assert_eq!(Money::dollar(10), reduced);
+    }
+
+    #[test]
+    fn plus_returns_sum() {
+        let five = Money::dollar(5);
+        let result = five + five;
+        assert_eq!(five, result.augend);
+        assert_eq!(five, result.addend);
+    }
+
+    #[test]
+    fn reduce_sum() {
+        let sum = Sum::new(Money::dollar(3), Money::dollar(4));
+        let bank = Bank::new();
+        let result = bank.reduce(sum, "USD");
+        assert_eq!(Money::dollar(7), result);
     }
 }
