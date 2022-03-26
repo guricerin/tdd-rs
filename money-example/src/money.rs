@@ -50,6 +50,11 @@ impl Sum {
             addend: addend,
         }
     }
+
+    pub fn reduce(&self, to: &'static str) -> Money {
+        let amount = self.augend.amount + self.addend.amount;
+        Money::new(amount, to)
+    }
 }
 
 impl Add for Money {
@@ -68,8 +73,7 @@ impl Bank {
     }
 
     pub fn reduce(&self, source: Sum, to: &'static str) -> Money {
-        let amount = source.augend.amount + source.addend.amount;
-        Money::new(amount, to)
+        source.reduce(to)
     }
 }
 
