@@ -1,58 +1,45 @@
-enum TestKind {
-    TestMethod,
-}
-
 struct TestCase {
-    was_setup: bool,
-    was_run: bool,
-    kind: TestKind,
+    log: String,
 }
 
 impl TestCase {
-    fn new(kind: TestKind) -> Self {
-        Self {
-            was_setup: true,
-            was_run: false,
-            kind: kind,
-        }
+    fn new() -> Self {
+        Self { log: "".to_owned() }
     }
 
     fn setup(&mut self) {
-        self.was_setup = true;
-        self.was_run = false;
+        self.log = "setup ".to_owned();
     }
 
-    fn run(&mut self) {
+    fn run<F>(&mut self, f: F)
+    where
+        F: FnOnce(&mut TestCase),
+    {
         self.setup();
-        match self.kind {
-            TestKind::TestMethod => self.test_method(),
-        }
+        f(self);
+        self.teardown();
+    }
+
+    fn teardown(&mut self) {
+        self.log = format!("{}teardown ", self.log);
     }
 
     fn test_method(&mut self) {
-        self.was_run = true;
+        self.log = format!("{}test_method ", self.log);
     }
 }
 
-struct TestCaseTest {
-    test: TestCase,
-}
+struct TestCaseTest {}
 
 impl TestCaseTest {
-    fn setup(kind: TestKind) -> Self {
-        Self {
-            test: TestCase::new(kind),
-        }
+    fn new() -> Self {
+        Self {}
     }
 
-    fn test_running(&mut self) {
-        self.test.run();
-        assert!(self.test.was_run);
-    }
-
-    fn test_setup(&mut self) {
-        self.test.run();
-        assert!(self.test.was_setup);
+    fn test_template_method(&self) {
+        let mut test = TestCase::new();
+        test.run(TestCase::test_method);
+        assert_eq!("setup test_method teardown ", test.log);
     }
 }
 
@@ -62,8 +49,7 @@ mod tests {
 
     #[test]
     fn method() {
-        let mut test = TestCaseTest::setup(TestKind::TestMethod);
-        test.test_running();
-        test.test_setup();
+        let test = TestCaseTest::new();
+        test.test_template_method();
     }
 }
