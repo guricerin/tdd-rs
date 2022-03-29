@@ -1,14 +1,24 @@
-struct WasRun {
-    was_run: bool,
+enum TestKind {
+    TestMethod,
 }
 
-impl WasRun {
-    fn new(name: String) -> Self {
-        Self { was_run: false }
+struct TestCase {
+    was_run: bool,
+    kind: TestKind,
+}
+
+impl TestCase {
+    fn new(kind: TestKind) -> Self {
+        Self {
+            was_run: false,
+            kind: kind,
+        }
     }
 
     fn run(&mut self) {
-        self.test_method();
+        match self.kind {
+            TestKind::TestMethod => self.test_method(),
+        }
     }
 
     fn test_method(&mut self) {
@@ -18,11 +28,11 @@ impl WasRun {
 
 #[cfg(test)]
 mod tests {
-    use crate::xunit::WasRun;
+    use crate::xunit::*;
 
     #[test]
     fn method() {
-        let mut test = WasRun::new("test_method".to_owned());
+        let mut test = TestCase::new(TestKind::TestMethod);
         assert!(!(test.was_run));
         test.run();
         assert!(test.was_run);
