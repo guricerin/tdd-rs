@@ -2,19 +2,27 @@ use anyhow::{anyhow, Result};
 
 struct TestResult {
     run_count: i32,
+    err_count: i32,
 }
 
 impl TestResult {
     fn new() -> Self {
-        Self { run_count: 0 }
+        Self {
+            run_count: 0,
+            err_count: 0,
+        }
     }
 
     fn test_started(&mut self) {
         self.run_count += 1;
     }
 
+    fn test_failed(&mut self) {
+        self.err_count += 1;
+    }
+
     fn summary(&self) -> String {
-        format!("{} run, 0 failed", self.run_count)
+        format!("{} run, {} failed", self.run_count, self.err_count)
     }
 }
 
@@ -38,7 +46,10 @@ impl TestCase {
         let mut result = TestResult::new();
         result.test_started();
         self.setup();
-        let _ = f(self);
+        match f(self) {
+            Ok(_) => (),
+            Err(_) => result.test_failed(),
+        };
         self.teardown();
         result
     }
@@ -81,6 +92,13 @@ impl TestCaseTest {
         let result = test.run(TestCase::test_broken_method);
         assert_eq!("1 run, 1 failed", result.summary());
     }
+
+    fn test_failed_result_formatting(&self) {
+        let mut result = TestResult::new();
+        result.test_started();
+        result.test_failed();
+        assert_eq!("1 run, 1 failed", result.summary());
+    }
 }
 
 #[cfg(test)]
@@ -92,6 +110,7 @@ mod tests {
         let test = TestCaseTest::new();
         test.test_template_method();
         test.test_result();
-        // test.test_failed_result();
+        test.test_failed_result();
+        test.test_failed_result_formatting();
     }
 }
