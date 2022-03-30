@@ -1,8 +1,8 @@
-fn fib(n: i64) -> i64 {
+fn fib(n: u64) -> u64 {
     match n {
         0 => 0,
-        n if n <= 2 => 1,
-        n => 2,
+        1 => 1,
+        n => fib(n - 1) + fib(n - 2),
     }
 }
 
