@@ -12,7 +12,9 @@ mod tests {
 
     #[test]
     fn fib_test() {
-        assert_eq!(0, fib(0));
-        assert_eq!(1, fib(1));
+        let cases = vec![(0, 0), (1, 1), (2, 1)];
+        for v in cases.iter() {
+            assert_eq!(v.1, fib(v.0));
+        }
     }
 }
