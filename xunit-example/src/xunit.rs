@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use anyhow::{anyhow, Result};
 
 struct TestResult {
@@ -26,28 +28,57 @@ impl TestResult {
     }
 }
 
+trait Testable {
+    fn run(&self) -> Result<()>;
+    fn name(&self) -> String;
+}
+
+struct TestMethod;
+impl Testable for TestMethod {
+    fn run(&self) -> Result<()> {
+        Ok(())
+    }
+    fn name(&self) -> String {
+        "test_method".to_owned()
+    }
+}
+
+struct TestBrokenMethod;
+impl Testable for TestBrokenMethod {
+    fn run(&self) -> Result<()> {
+        Err(anyhow!(""))
+    }
+    fn name(&self) -> String {
+        "test_broken_method".to_owned()
+    }
+}
+
 struct TestCase {
+    method: Box<dyn Testable>,
     log: String,
 }
 
 impl TestCase {
-    fn new() -> Self {
-        Self { log: "".to_owned() }
+    fn new<T>(t: T) -> Self
+    where
+        T: Testable + 'static,
+    {
+        Self {
+            method: Box::new(t),
+            log: "".to_owned(),
+        }
     }
 
     fn setup(&mut self) {
         self.log = "setup ".to_owned();
     }
 
-    fn run<F>(&mut self, f: F) -> TestResult
-    where
-        F: FnOnce(&mut TestCase) -> Result<()>,
-    {
+    fn run(&mut self) -> TestResult {
         let mut result = TestResult::new();
         result.test_started();
         self.setup();
-        match f(self) {
-            Ok(_) => (),
+        match self.method.run() {
+            Ok(_) => self.log = format!("{}{} ", self.log, self.method.name()),
             Err(_) => result.test_failed(),
         };
         self.teardown();
@@ -68,6 +99,26 @@ impl TestCase {
     }
 }
 
+struct TestSuite {
+    tests: Vec<TestCase>,
+}
+
+impl TestSuite {
+    fn new() -> Self {
+        Self { tests: Vec::new() }
+    }
+
+    fn add(&mut self, test: TestCase) {
+        self.tests.push(test);
+    }
+
+    fn run(&self) -> TestResult {
+        let mut result = TestResult::new();
+        for test in self.tests.iter() {}
+        todo!()
+    }
+}
+
 struct TestCaseTest {}
 
 impl TestCaseTest {
@@ -76,20 +127,20 @@ impl TestCaseTest {
     }
 
     fn test_template_method(&self) {
-        let mut test = TestCase::new();
-        test.run(TestCase::test_method);
+        let mut test = TestCase::new(TestMethod);
+        test.run();
         assert_eq!("setup test_method teardown ", test.log);
     }
 
     fn test_result(&self) {
-        let mut test = TestCase::new();
-        let result = test.run(TestCase::test_method);
+        let mut test = TestCase::new(TestMethod);
+        let result = test.run();
         assert_eq!("1 run, 0 failed", result.summary());
     }
 
     fn test_failed_result(&self) {
-        let mut test = TestCase::new();
-        let result = test.run(TestCase::test_broken_method);
+        let mut test = TestCase::new(TestBrokenMethod);
+        let result = test.run();
         assert_eq!("1 run, 1 failed", result.summary());
     }
 
@@ -98,6 +149,14 @@ impl TestCaseTest {
         result.test_started();
         result.test_failed();
         assert_eq!("1 run, 1 failed", result.summary());
+    }
+
+    fn test_suite(&self) {
+        let mut suite = TestSuite::new();
+        suite.add(TestCase::new(TestMethod));
+        suite.add(TestCase::new(TestBrokenMethod));
+        let result = suite.run();
+        assert_eq!("2 run, 1 failed", result.summary());
     }
 }
 
@@ -112,5 +171,6 @@ mod tests {
         test.test_result();
         test.test_failed_result();
         test.test_failed_result_formatting();
+        // test.test_suite();
     }
 }
